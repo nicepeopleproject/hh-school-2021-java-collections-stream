@@ -19,9 +19,14 @@ import java.util.stream.Collectors;
 public class Task1 implements Task {
 
   // !!! Редактируйте этот метод !!!
+  // Асимптотика для каждого id будет искать человека, максимум придётся делать n = persons.size()
+  // Если в personIds m id, то mn, грубо можно оценить как O(n^2)
   private List<Person> findOrderedPersons(List<Integer> personIds) {
     Set<Person> persons = PersonService.findPersons(personIds);
-    return Collections.emptyList();
+    return personIds.stream().map(id->persons.stream()
+            .filter(person->person.getId().equals(id))
+            .findFirst().get())
+            .collect(Collectors.toList());
   }
 
   @Override
