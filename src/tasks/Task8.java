@@ -41,41 +41,54 @@ public class Task8 implements Task {
     //Для фронтов выдадим полное имя, а то сами не могут
     // можно более компактно
     public String convertPersonToString(Person person) {
-        return Optional.of(person.getFirstName()).orElse("")
-                + person.getFirstName() != null ? " " : ""
-                + Optional.of(person.getSecondName()).orElse("");
+        String[] names = {person.getFirstName(), person.getSecondName()};
+        return Arrays.stream(names).collect(Collectors.joining(" : "));
     }
 
     // словарь id персоны -> ее имя
     // в документации написано, что возвращает имя, на самом деле возвращает ещё и фамилию, это мы конечно поравим
     // соберем из данной коллекции сразу нужный словарь, код станет более читабельным
+    // Хочу понять, есть смысл в использовании distinct?
+    // По сути HashMap будет содержать в себе одну записать для каждого человека,
+    // даже в том случае, если одного человека передадут несколько раз
+    // а stream.distinct требует затрат по времени
     public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-        return persons.stream()
+        Set<Integer> seenIds = new HashSet<>();
+        // идея заключается в том, что equals может работать намного медленее, чем сравнение по id
+        return persons.stream().filter(person ->
+                {
+                    if (seenIds.contains(person.getId())) return false;
+                    seenIds.add(person.getId());
+                    return true;
+
+                })
                 .collect(Collectors.toMap(Person::getId, Person::getFirstName));
+//        return persons.stream().distinct() // так можно было бы использовать distinct
+//                .collect(Collectors.toMap(Person::getId, Person::getFirstName));
     }
 
     // есть ли совпадающие в двух коллекциях персоны?
     // код делает лишние действия, лучше было бы выполнять return true, сразу как мы нашли такого человека
-    // по быстродействию, после исправления выше вряд ли можно сильно ускорить, но можно значительно повысить читаймость
+    // мы не в курсе какая коллекция, создание set из уникальных значений - o(n^2)
+    // anyMatch - o(n^2)
+    // если в коллекциях много повторов, то такой подход может стоить того
     public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-        return persons1.stream()
-                .filter(person -> persons2.contains(person))
-                .findAny()
-                .isPresent();
+        Set<Integer> persons1Ids = persons1.stream().map(Person::getId).collect(Collectors.toSet());
+        Set<Integer> persons2Ids = persons2.stream().map(Person::getId).collect(Collectors.toSet());
+        return persons2Ids.stream().anyMatch(persons1Ids::contains);
     }
 
     //метод находит количество четных
     // улучшим читаймость кода
-    // (num+1)%2 для четных будет равняться 1, для нечетных 0, если найдём сумму, то найдём количество четных
     public long countEven(Stream<Integer> numbers) {
-        return numbers.map(num -> (num + 1) % 2).reduce(0, (x, y) -> x + y);
+        return numbers.filter(num -> num % 2 == 0).count();
     }
 
     @Override
     public boolean check() {
         System.out.println("Слабо дойти до сюда и исправить Fail этой таски?");
-        boolean codeSmellsGood = true;
-        boolean reviewerDrunk = false;
+        boolean codeSmellsGood = false;
+        boolean reviewerDrunk = true;
         return codeSmellsGood || reviewerDrunk;
     }
 }

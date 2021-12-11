@@ -18,28 +18,10 @@ public class Task3 implements Task {
 
   // !!! Редактируйте этот метод !!!
   private List<Person> sort(Collection<Person> persons) {
-    // хотелось бы узнать более красивое решение в плане кода
-    Comparator<Person> personComparator = new Comparator<Person>() {
-      @Override
-      public int compare(Person o1, Person o2) {
-        if (o1.getFirstName().compareTo(o2.getFirstName())==0){
-          if (o1.getSecondName().compareTo(o2.getSecondName()) == 0){
-            return o1.getCreatedAt().compareTo(o2.getCreatedAt());
-          }else{
-            return o1.getSecondName().compareTo(o2.getSecondName());
-          }
-        }else{
-          return o1.getFirstName().compareTo(o2.getFirstName());
-        }
-      }
-    };
-//    // очень опасное моё второе решение
-//    return persons.stream().sorted(Comparator.comparing(Person::getCreatedAt))
-//            .sorted(Comparator.comparing(Person::getSecondName))
-//            .sorted(Comparator.comparing(Person::getFirstName))
-//            .collect(Collectors.toList());
     return persons.stream()
-            .sorted(personComparator)
+            .sorted(Comparator.comparing(Person::getSecondName)
+                    .thenComparing(Person::getFirstName)
+                    .thenComparing(Person::getCreatedAt))
             .collect(Collectors.toList());
   }
 
