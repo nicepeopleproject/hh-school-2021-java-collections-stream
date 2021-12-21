@@ -39,43 +39,24 @@ public class Task8 implements Task {
     }
 
     //Для фронтов выдадим полное имя, а то сами не могут
-    // можно более компактно
     public String convertPersonToString(Person person) {
-        String[] names = {person.getFirstName(), person.getSecondName()};
-        return Arrays.stream(names).collect(Collectors.joining(" : "));
+        return Stream.of(person.getFirstName(), person.getMiddleName(), person.getSecondName())
+                .filter(n -> n != null)
+                .collect(Collectors.joining(" "));
     }
 
     // словарь id персоны -> ее имя
-    // в документации написано, что возвращает имя, на самом деле возвращает ещё и фамилию, это мы конечно поравим
-    // соберем из данной коллекции сразу нужный словарь, код станет более читабельным
-    // Хочу понять, есть смысл в использовании distinct?
-    // По сути HashMap будет содержать в себе одну записать для каждого человека,
-    // даже в том случае, если одного человека передадут несколько раз
-    // а stream.distinct требует затрат по времени
     public Map<Integer, String> getPersonNames(Collection<Person> persons) {
-        Set<Integer> seenIds = new HashSet<>();
-        // идея заключается в том, что equals может работать намного медленее, чем сравнение по id
-        return persons.stream().filter(person ->
-                {
-                    if (seenIds.contains(person.getId())) return false;
-                    seenIds.add(person.getId());
-                    return true;
-
-                })
-                .collect(Collectors.toMap(Person::getId, Person::getFirstName));
-//        return persons.stream().distinct() // так можно было бы использовать distinct
+        return persons.stream().collect(Collectors.toMap(Person::getId, Person::getFirstName, (a, b) -> a));
+        // версия с distinct
+//        return persons.stream().distinct()
 //                .collect(Collectors.toMap(Person::getId, Person::getFirstName));
     }
 
     // есть ли совпадающие в двух коллекциях персоны?
-    // код делает лишние действия, лучше было бы выполнять return true, сразу как мы нашли такого человека
-    // мы не в курсе какая коллекция, создание set из уникальных значений - o(n^2)
-    // anyMatch - o(n^2)
-    // если в коллекциях много повторов, то такой подход может стоить того
+    // В итоге получится O(n)
     public boolean hasSamePersons(Collection<Person> persons1, Collection<Person> persons2) {
-        Set<Integer> persons1Ids = persons1.stream().map(Person::getId).collect(Collectors.toSet());
-        Set<Integer> persons2Ids = persons2.stream().map(Person::getId).collect(Collectors.toSet());
-        return persons2Ids.stream().anyMatch(persons1Ids::contains);
+        return persons1.stream().anyMatch(new HashSet<>(persons2)::contains);
     }
 
     //метод находит количество четных
@@ -87,7 +68,7 @@ public class Task8 implements Task {
     @Override
     public boolean check() {
         System.out.println("Слабо дойти до сюда и исправить Fail этой таски?");
-        boolean codeSmellsGood = false;
+        boolean codeSmellsGood = true;
         boolean reviewerDrunk = true;
         return codeSmellsGood || reviewerDrunk;
     }
